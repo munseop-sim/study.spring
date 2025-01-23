@@ -15,6 +15,8 @@ dependencies {
     val reactor = "3.7.2"
     implementation("io.projectreactor:reactor-core:$reactor")
     implementation(project(":common"))
+    // reactor 테스트를 위함
+    testImplementation("io.projectreactor:reactor-test:$reactor")
 }
 
 tasks.test {
@@ -33,5 +35,8 @@ dependencyManagement {
 sourceSets {
     main {
         java.srcDir("src/main/kotlin")
+    }
+    test {
+        java.srcDir("src/test/kotlin")
     }
 }

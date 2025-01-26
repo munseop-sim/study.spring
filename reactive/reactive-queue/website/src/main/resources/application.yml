@@ -1,0 +1,7 @@
+server:
+  port: 9000
+
+
+custom:
+  waiting-room-url: "http://127.0.0.1:9010/waiting-room"
+  waiting-server: "http://127.0.0.1:9010"

@@ -1,0 +1,23 @@
+server.port: 9010
+
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 16379
+
+scheduler:
+  enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 63790
+
+scheduler:
+  enabled: false

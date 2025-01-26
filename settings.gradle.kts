@@ -5,3 +5,6 @@ rootProject.name = "study.spring"
 include("common")
 // include("reactor")
 include("reactive:reactor")
+include("reactive:reactive-queue")
+include("reactive:reactive-queue:website")
+include("reactive:reactive-queue:waiting-room")

@@ -1,9 +1,0 @@
-version: '3'
-services:
-  redis:
-    image: 'redis:7.4.2'
-    container_name: redis-queue
-    ports:
-      - "16379:6379"
-    volumes:
-      - ./.data/redis:/data

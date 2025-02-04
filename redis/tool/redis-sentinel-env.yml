@@ -1,0 +1,83 @@
+version: "3.8"
+services:
+  redis-master:
+    image: 'redis:7.4.2-alpine'
+    container_name: redis-master
+    hostname: redis-master
+    volumes:
+      - ./data/redis-master:/data
+    #     - ./redis-master.conf:/etc/redis.conf      #파일을 바인딩하게 되면 fail-over시에 docker권한 에러 발생으로 정상적인 fail-over가 이뤄지지 않음
+    ports:
+      - "6379:6379"
+    networks:
+      - redis_network
+    command: >
+      sh -c 'echo "port 6379" > /etc/redis.conf &&
+      echo "bind 0.0.0.0" > /etc/redis.conf &&
+      echo "protected-mode no" > /etc/redis.conf &&
+      echo "requirepass 1234" > /etc/redis.conf &&
+      echo "appendonly yes" > /etc/redis.conf &&
+      echo "dir /data" > /etc/redis.conf &&
+      redis-server /etc/redis.conf'
+  
+  
+  
+  redis-slave:
+    image: 'redis:7.4.2-alpine'
+    #    container_name: redis-slave # scale 시에 컨테이이너 이름을 붙일 수 없음
+    depends_on:
+      - redis-master
+    networks:
+      - redis_network
+    ports:
+      - "6380-6381:6379"
+    volumes:
+      - ./data/redis-slave:/data
+    command: >
+      sh -c 'echo "port 6379" > /etc/redis.conf &&
+      echo "bind 0.0.0.0" > /etc/redis.conf &&
+      echo "protected-mode no" > /etc/redis.conf &&
+      echo "requirepass 1234" > /etc/redis.conf &&
+      echo "masterauth 1234" > /etc/redis.conf &&
+      echo "appendonly yes" > /etc/redis.conf &&
+      echo "dir /data" > /etc/redis.conf &&
+      echo "slaveof redis-master 6379" > /etc/redis.conf &&
+      redis-server /etc/redis.conf'
+
+  redis-sentinel:
+    image: 'redis:7.4.2-alpine'
+    #    container_name: redis-sentinel # scale 시에 컨테이이너 이름을 붙일 수 없음
+    depends_on:
+      - redis-master
+    volumes:
+      - ./data/redis-sentinel:/data
+    networks:
+      - redis_network
+    ports:
+      - "26379-26381:26379"
+    command: >
+      sh -c 'echo "bind 0.0.0.0" > /etc/sentinel.conf &&
+            echo "sentinel resolve-hostnames yes" >> /etc/sentinel.conf && 
+            echo "sentinel monitor mymaster redis-master 6379 2" >> /etc/sentinel.conf &&
+            echo "sentinel resolve-hostnames yes" >> /etc/sentinel.conf &&
+            echo "sentinel down-after-milliseconds mymaster 10000" >> /etc/sentinel.conf &&
+            echo "sentinel failover-timeout mymaster 10000" >> /etc/sentinel.conf &&
+            echo "sentinel parallel-syncs mymaster 1" >> /etc/sentinel.conf &&
+            echo "dir /data" > /etc/redis.conf &&
+            redis-sentinel /etc/sentinel.conf'
+
+  redis-insight:
+    image: 'redis/redisinsight:latest'
+    hostname: redis-insight
+    container_name: redis-insight
+    depends_on:
+      - redis-sentinel
+    volumes:
+      - ./data/redis-insight:/data
+    ports:
+      - "5540:5540"
+
+
+networks:
+  redis_network:
+    driver: bridge
